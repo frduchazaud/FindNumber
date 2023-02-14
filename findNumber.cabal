@@ -42,7 +42,9 @@ library
         src
 
     -- LANGUAGE extensions used by modules in this package.
-    -- other-extensions:
+    other-extensions: 
+        LambdaCase
+
     build-depends:
         base >=4.7 && <5
         , flow
@@ -63,7 +65,8 @@ executable findNumber.exe
     -- other-modules:
 
     -- LANGUAGE extensions used by modules in this package.
-    -- other-extensions:
+    other-extensions:
+        LambdaCase
 
     build-depends:
         base >=4.7 && <5

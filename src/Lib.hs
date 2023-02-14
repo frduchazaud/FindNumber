@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Lib
     ( game
     ) where
@@ -32,25 +34,25 @@ promptInt msg =
         tryTextToInt :: String -> IO (Maybe Int)
         tryTextToInt str =
             if all Char.isDigit str then
-                return <| Just <| read str
+                pure $ Just $ read str
 
             else do
-                writeWarning <| "Impossible de lire \"" ++ str
+                writeWarning $ "Impossible de lire \"" ++ str
                     ++ "\" comme un nombre entier !"
-                return Nothing
+                pure Nothing
     in do
-        putStr <| msg ++ " (nombre entier positif) > "
+        putStr $ msg ++ " (nombre entier positif) > "
         hFlush stdout
         str <- getLine
         if null str then
-            return Nothing
+            pure Nothing
 
         else
             (str
                 |> trimFirstWord
                 |> tryTextToInt
-            ) -- => IO (Maybe Int)
-                >>= maybe (promptInt msg) (return <. Just)
+            ) -- :: IO (Maybe Int)
+                >>= maybe (promptInt msg) (pure <. Just)
 
 
 trimLeft :: String -> String
@@ -119,16 +121,16 @@ askFirstName i =
             null trimmed || not (any Char.isAlpha trimmed)
                 || not (pronouncable trimmed)
         then do
-            writeWarning <|
+            writeWarning $
                 select i exclams
                 ++ " ! Ce prénom est "
                 ++ select i adverbs
                 ++ select i adjs
                 ++ "...   (???)"
-            askFirstName <| i + 1
+            askFirstName $ i + 1
 
         else
-            return trimmed
+            pure trimmed
 
 
 pronouncable :: String -> Bool
@@ -181,76 +183,81 @@ isConsonant c =
 
 
 game :: IO ()
-game = do
-    firstName <- askFirstName 0
-    putStrLn <| "\nBienvenue " ++ firstName
-        ++ " dans le jeu \"TROUVE LE NOMBRE SECRET\" !\n"
-    putStrLn
-        "Le but de ce jeu est de trouver un nombre secret compris entre deux bornes."
-    putStrLn "Pour commencer, je vais te demander de choisir l'intervalle."
-    putStrLn
-        "Ensuite je choisirai un nombre secret et tu essaieras de le deviner le plus vite possible.\n"
-    maybeInterval <-
-        runMaybeT <| do
-            isub <- MaybeT askIntervalSub
-            isup <- MaybeT <| askIntervalSup isub
-            return (isub, isup)
-    case maybeInterval of
-        Nothing ->
-            stopGame
+game =
+    do  firstName <- askFirstName 0
+        putStrLn $ "\nBienvenue " ++ firstName
+            ++ " dans le jeu \"TROUVE LE NOMBRE SECRET\" !\n"
+        putStrLn
+            "Le but de ce jeu est de trouver un nombre secret compris entre deux bornes."
+        putStrLn "Pour commencer, je vais te demander de choisir l'intervalle."
+        putStrLn
+            "Ensuite je choisirai un nombre secret et tu essaieras de le deviner le plus vite possible.\n"
+        maybeInterval <-
+            runMaybeT $ do
+                isub <- MaybeT askIntervalSub
+                isup <- MaybeT $ askIntervalSup isub
+                pure (isub, isup)
+        case maybeInterval of
+            Nothing ->
+                stopGame
 
-        Just (isub, isup) -> do
-            secret <- generateSecretNumber isub isup
-            putStrLn <|
-                "\nÇa y est, j'ai choisi le nombre secret dans l'intervalle ["
-                ++ show isub
-                ++ ", "
-                ++ show isup
-                ++ "]"
-            trytoFind isub isup secret
-    putStrLn <| "\nAu revoir " ++ firstName ++ " !\n"
+            Just (isub, isup) ->
+                do  secret <- generateSecretNumber isub isup
+                    putStrLn $
+                        "\nÇa y est, j'ai choisi le nombre secret dans l'intervalle ["
+                        ++ show isub
+                        ++ ", "
+                        ++ show isup
+                        ++ "]"
+                    trytoFind isub isup secret
+        putStrLn $ "\nAu revoir " ++ firstName ++ " !\n"
 
 
 trytoFind :: Int -> Int -> Int -> IO ()
-trytoFind isub isup secret = do
-    putStrLn "À ton avis, quel est ce nombre secret ?\n"
-    tryAgain 1
-    where
-        tryAgain :: Int -> IO ()
-        tryAgain nbTriesAcc = do
-            maybeTry <- promptInt <| iemeFeminin nbTriesAcc ++ " proposition"
-            maybeTry
-                |> maybe stopGame (check nbTriesAcc)
+trytoFind isub isup secret =
+        let
+            tryAgain :: Int -> IO ()
+            tryAgain nbTriesAcc =
+                do  maybeTry <- promptInt $ iemeFeminin nbTriesAcc ++ " proposition"
+                    maybeTry
+                        |> maybe stopGame (check nbTriesAcc)
 
-        check :: Int -> Int -> IO ()
-        check nbTriesAcc i
-            | i == secret = bravo nbTriesAcc
-            | i < secret = do
-                putStrLn <| show i ++ " est TROP PETIT\n"
-                tryAgain <| nbTriesAcc + 1
-            | otherwise = do
-                putStrLn <| show i ++ " est TROP GRAND\n"
-                tryAgain <| nbTriesAcc + 1
+            check :: Int -> Int -> IO ()
+            check nbTriesAcc i
+                | i == secret =
+                    bravo nbTriesAcc
 
-        bravo :: Int -> IO ()
-        bravo nbTries = do
-            putStrLn line
-            putStrLn msg
-            putStrLn line
-            where
-                msg :: String
-                msg =
-                    "| Bravo, tu as trouvé en " ++ show nbTries
-                        ++ pluriel nbTries " coup"
-                        ++ " ! |"
+                | i < secret =
+                    do  putStrLn $ show i ++ " est TROP PETIT\n"
+                        tryAgain $ nbTriesAcc + 1
+                
+                | otherwise =
+                    do  putStrLn $ show i ++ " est TROP GRAND\n"
+                        tryAgain $ nbTriesAcc + 1
 
-                line :: String
-                line =
-                    repeat '-'
-                        |> take (length msg - 2)
-                        |> (++ "+")
-                        |> ('+' :)
+            bravo :: Int -> IO ()
+            bravo nbTries =
+                let
+                    msg :: String
+                    msg =
+                        "| Bravo, tu as trouvé en " ++ show nbTries
+                            ++ pluriel nbTries " coup"
+                            ++ " ! |"
 
+                    line :: String
+                    line =
+                        repeat '-'
+                            |> take (length msg - 2)
+                            |> (++ "+")
+                            |> ('+' :)
+                in 
+                    do  putStrLn line
+                        putStrLn msg
+                        putStrLn line
+
+        in
+            do  putStrLn "À ton avis, quel est ce nombre secret ?\n"
+                tryAgain 1
 
 iemeMasculin :: Int -> String
 iemeMasculin i =
@@ -266,10 +273,10 @@ iemeMasculin i =
 
 
 iemeFeminin :: Int -> String
-iemeFeminin i
-    | i == 1 = "1re"
-    | i == 2 = "2de"
-    | otherwise = show i ++ "e"
+iemeFeminin = \case
+    1 -> "1re"
+    2 -> "2de"
+    _ -> show i ++ "e"
 
 
 pluriel :: Int -> String -> String
@@ -279,49 +286,49 @@ pluriel i
 
 
 askIntervalSub :: IO (Maybe Int)
-askIntervalSub = do
-    isub <- promptInt "limite INFÉRIEURE de l'intervalle"
-    isub
-        |> maybe (return Nothing) (return <. Just)
+askIntervalSub =
+    do  isub <- promptInt "limite INFÉRIEURE de l'intervalle"
+        isub
+            |> maybe (pure Nothing) (pure <. Just)
 
 
 askIntervalSup :: Int -> IO (Maybe Int)
-askIntervalSup isub = do
-    maybeIsup <- promptInt "limite SUPÉRIEURE de l'intervalle"
-    case maybeIsup of
-        Just isup ->
-            if isub < isup then
-                return <| Just isup
+askIntervalSup isub =
+    do  maybeIsup <- promptInt "limite SUPÉRIEURE de l'intervalle"
+        case maybeIsup of
+            Just isup ->
+                if isub < isup then
+                    pure $ Just isup
 
-            else do
-                writeWarning <|
-                    "La limite supérieure doit être supérieure à la limite inférieure ("
-                    ++ show isub
-                    ++ ") !"
-                askIntervalSup isub
+                else
+                    do  writeWarning $
+                            "La limite supérieure doit être supérieure à la limite inférieure ("
+                            ++ show isub
+                            ++ ") !"
+                        askIntervalSup isub
 
-        Nothing ->
-            return Nothing
+            Nothing ->
+                pure Nothing
 
 
 generateSecretNumber :: Int -> Int -> IO Int
-generateSecretNumber isub isup = do
-    sysTime <- SysTime.getSystemTime
-    sysTime
-        |> SysTime.systemNanoseconds
-        |> toInteger
-        |> fromInteger
-        |> Random.mkStdGen
-        |> Random.uniformR (isub, isup)
-        |> fst
-        |> return
+generateSecretNumber isub isup =
+    do  sysTime <- SysTime.getSystemTime
+        sysTime
+            |> SysTime.systemNanoseconds
+            |> toInteger
+            |> fromInteger
+            |> Random.mkStdGen
+            |> Random.uniformR (isub, isup)
+            |> fst
+            |> pure
 
 
 writeWarning :: String -> IO ()
-writeWarning msg = do
-    putStrLn "    *"
-    putStrLn <| "   /!\\  " ++ msg
-    putStrLn "  -----"
+writeWarning msg =
+    do  putStrLn   "    *"
+        putStrLn $ "   /!\\  " ++ msg
+        putStrLn   "  -----"
 
 
 stopGame :: IO ()
