@@ -1,5 +1,5 @@
 cabal-version:      2.4
-name:               gitpod-template
+name:               FindNumber
 version:            0.1.0.0
 synopsis:           See README for more info
 tested-with:        GHC==8.10.7
@@ -30,11 +30,11 @@ library
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base ^>=4.14.3.0
+    build-depends:    base >=4.14.3.0
     hs-source-dirs:   src
     default-language: Haskell2010
 
-executable gitpod-template
+executable FindNumber
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
@@ -43,8 +43,8 @@ executable gitpod-template
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:
-        base ^>=4.14.3.0,
-        gitpod-template
+        base >=4.14.3.0,
+        FindNumber
 
     hs-source-dirs:   app
     default-language: Haskell2010
