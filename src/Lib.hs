@@ -276,7 +276,7 @@ iemeFeminin :: Int -> String
 iemeFeminin = \case
     1 -> "1re"
     2 -> "2de"
-    _ -> show i ++ "e"
+    i -> show i ++ "e"
 
 
 pluriel :: Int -> String -> String
