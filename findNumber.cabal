@@ -1,19 +1,22 @@
 cabal-version:      2.4
-name:               FindNumber
+name:               findNumber
 version:            0.1.0.0
 synopsis:           See README for more info
 tested-with:        GHC==8.10.7
 
+
+
+
 -- A longer description of the package.
 -- description:
-homepage:           https://github.com/gitpod-io/template-haskell
+homepage:           https://github.com/frduchazaud/findNumber#readme
 
 -- A URL where users can report bugs.
--- bug-reports:
+bug-reports: https://github.com/frduchazaud/findNumber/issues
 license:            MIT
 license-file:       LICENSE
-author:             Gitpod
-maintainer:         contact@gitpod.io
+author:             frduchazaud
+maintainer:         frduchazaud@gmail.com
 
 -- A copyright notice.
 -- copyright:
@@ -22,36 +25,62 @@ extra-source-files:
     CHANGELOG.md
     README.md
 
+
+source-repository head
+  type: git
+  location: https://github.com/frduchazaud/findNumber
+
 library
-    exposed-modules:  MyLib
+    exposed-modules:  
+        Lib
 
     -- Modules included in this library but not exported.
-    -- other-modules:
+    other-modules:
+    --    Paths_findNumber
+    
+    hs-source-dirs:
+        src
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base >=4.14.3.0
-    hs-source-dirs:   src
+    build-depends:
+        base >=4.7 && <5
+        , flow
+        , megaparsec
+        , random >=1.2
+        , text
+        , time
+        , transformers
+
     default-language: Haskell2010
 
-executable FindNumber
+executable findNumber.exe
     main-is:          Main.hs
+
+    hs-source-dirs:   app
 
     -- Modules included in this executable, other than Main.
     -- other-modules:
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:
-        base >=4.14.3.0,
-        FindNumber
 
-    hs-source-dirs:   app
+    build-depends:
+        base >=4.7 && <5
+        , findNumber
+        , flow
+        , megaparsec
+        , random >=1.2
+        , text
+        , time
+        , transformers
+
     default-language: Haskell2010
 
 test-suite gitpod-template-test
     default-language: Haskell2010
     type:             exitcode-stdio-1.0
     hs-source-dirs:   test
-    main-is:          MyLibTest.hs
-    build-depends:    base ^>=4.14.3.0
+    main-is:          LibTest.hs
+    build-depends:    base >=4.7 && <5
+
